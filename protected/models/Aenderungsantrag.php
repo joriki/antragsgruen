@@ -382,6 +382,30 @@ class Aenderungsantrag extends IAntrag
 	}
 
 	/**
+	 * @param string $revision
+	 */
+	public function adminFreischalten($revision = '')
+	{
+		if ($revision != '') {
+			$this->revision_name = $revision;
+		} elseif ($this->revision_name == '') {
+			$this->revision_name = $this->naechsteAenderungsRevNr();
+		}
+		if (in_array($this->status, array(IAntrag::$STATUS_EINGEREICHT_UNGEPRUEFT, IAntrag::$STATUS_UNBESTAETIGT))) {
+			$this->status = IAntrag::$STATUS_EINGEREICHT_GEPRUEFT;
+		}
+		$this->save();
+		$this->antrag->veranstaltung->resetLineCache();
+
+		$benachrichtigt = array();
+		foreach ($this->antrag->veranstaltung->veranstaltungsreihe->veranstaltungsreihenAbos as $abo) {
+			if ($abo->antraege && !in_array($abo->person_id, $benachrichtigt)) {
+				$abo->person->benachrichtigenAenderungsantrag($this);
+				$benachrichtigt[] = $abo->person_id;
+			}
+		}
+	}
+	/**
 	 * @return int
 	 */
 	public function getFirstDiffLine()
@@ -442,18 +466,19 @@ class Aenderungsantrag extends IAntrag
 	}
 
 	/**
-	 * @param int $veranstaltung_id
+	 * @param Veranstaltung $veranstaltung
 	 * @param int $limit
 	 * @return array|Aenderungsantrag[]
 	 */
-	public static function holeNeueste($veranstaltung_id = 0, $limit = 5)
+	public static function holeNeueste($veranstaltung, $limit = 5)
 	{
 		$oCriteria        = new CDbCriteria();
 		$oCriteria->alias = "aenderungsantrag";
 		$oCriteria->addNotInCondition("aenderungsantrag.status", IAntrag::$STATI_UNSICHTBAR);
 		$oCriteria->with = "antrag";
-		if ($veranstaltung_id > 0) $oCriteria->addCondition("antrag.veranstaltung_id = " . IntVal($veranstaltung_id));
-		$oCriteria->addNotInCondition("antrag.status", IAntrag::$STATI_UNSICHTBAR);
+		$oCriteria->addCondition("antrag.veranstaltung_id = " . IntVal($veranstaltung->id));
+		$unsichtbar = $veranstaltung->getAntragUnsichtbarStati();
+		$oCriteria->addNotInCondition("antrag.status", $unsichtbar);
 		$oCriteria->order = 'aenderungsantrag.datum_einreichung DESC';
 		$dataProvider     = new CActiveDataProvider('Aenderungsantrag', array(
 			'criteria'   => $oCriteria,

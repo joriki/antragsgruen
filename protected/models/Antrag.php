@@ -39,7 +39,9 @@ class Antrag extends IAntrag
 	public static $TYP_FINANZANTRAG = 5;
 	public static $TYP_WAHLPROGRAMM = 6;
 	public static $TYP_DRINGLICHKEITSANTRAG = 7;
-    public static $TYP_TAGESORDNUNG = 8;
+	public static $TYP_TAGESORDNUNG = 8;
+	public static $TYP_ENTWURF = 9;
+
 	public static $TYPEN = array(
 		0 => "Antrag",
 		1 => "Satzung",
@@ -49,7 +51,8 @@ class Antrag extends IAntrag
 		5 => "Finanzantrag",
 		6 => "Wahlprogramm",
 		7 => "Dringlichkeitsantrag",
-        8 => "Tagesordnung",
+		8 => "Tagesordnung",
+		9 => "Entwurf",
 	);
 
 	public static $TYP_PREFIX = array(
@@ -61,12 +64,13 @@ class Antrag extends IAntrag
 		5 => "F",
 		6 => "Kapitel ",
 		7 => "D",
-        8 => "T",
+		8 => "T",
+		9 => "E",
 	);
 
     public static $TYPEN_SORTED = array(
         8, // Tagesordnung
-        2, 7, 4, 3, 0, 5, 6,
+        2, 7, 4, 3, 0, 5, 6, 9,
         1, // Satzung
     );
 
@@ -159,7 +163,7 @@ class Antrag extends IAntrag
 			'datum_einreichung'        => Yii::t('app', 'Datum Einreichung'),
 			'datum_beschluss'          => Yii::t('app', 'Datum Beschluss'),
 			'text'                     => Yii::t('app', 'Text'),
-            'text'                     => Yii::t('app', 'Text 2'),
+            'text2'                    => Yii::t('app', 'Text 2'),
 			'begruendung'              => Yii::t('app', 'Begründung'),
 			'begruendung_html'         => Yii::t('app', 'Begründung in HTML'),
 			'status'                   => Yii::t('app', 'Status'),
@@ -294,16 +298,16 @@ class Antrag extends IAntrag
 
 
 	/**
-	 * @param int $veranstaltung_id
+	 * @param Veranstaltung $veranstaltung
 	 * @param int $limit
 	 * @return array|Antrag[]
 	 */
-	public static function holeNeueste($veranstaltung_id = 0, $limit = 5)
+	public static function holeNeueste($veranstaltung, $limit = 5)
 	{
 		$oCriteria        = new CDbCriteria();
 		$oCriteria->alias = "antrag";
-		if ($veranstaltung_id > 0) $oCriteria->addCondition("antrag.veranstaltung_id = " . IntVal($veranstaltung_id));
-		$unsichtbar   = IAntrag::$STATI_UNSICHTBAR;
+		$oCriteria->addCondition("antrag.veranstaltung_id = " . IntVal($veranstaltung->id));
+		$unsichtbar = $veranstaltung->getAntragUnsichtbarStati();
 		$unsichtbar[] = IAntrag::$STATUS_MODIFIZIERT;
 		$oCriteria->addNotInCondition("antrag.status", $unsichtbar);
 		$oCriteria->order = 'antrag.datum_einreichung DESC';
@@ -358,6 +362,31 @@ class Antrag extends IAntrag
 		if (strlen($this->revision_name) > 1 && !in_array($this->revision_name[strlen($this->revision_name) - 1], array(":", "."))) $name .= ":";
 		$name .= " " . $this->name;
 		return $name;
+	}
+
+	/**
+	 * @param string $revision
+	 */
+	public function adminFreischalten($revision = '')
+	{
+		if ($revision != '') {
+			$this->revision_name = $revision;
+		} elseif ($this->revision_name == '') {
+			$this->revision_name = $this->veranstaltung->naechsteAntragRevNr($this->typ);
+		}
+		if (in_array($this->status, array(IAntrag::$STATUS_EINGEREICHT_UNGEPRUEFT, IAntrag::$STATUS_UNBESTAETIGT))) {
+			$this->status = IAntrag::$STATUS_EINGEREICHT_GEPRUEFT;
+		}
+		$this->save();
+		$this->veranstaltung->resetLineCache();
+
+		$benachrichtigt = array();
+		foreach ($this->veranstaltung->veranstaltungsreihe->veranstaltungsreihenAbos as $abo) {
+			if ($abo->antraege && !in_array($abo->person_id, $benachrichtigt)) {
+				$abo->person->benachrichtigenAntrag($this);
+				$benachrichtigt[] = $abo->person_id;
+			}
+		}
 	}
 
 	/**

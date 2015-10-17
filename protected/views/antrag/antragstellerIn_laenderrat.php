@@ -98,6 +98,7 @@ $bin_organisation = ($antragstellerIn->typ == Person::$TYP_ORGANISATION);
             }
         }).change();
 
+        /*
         if ($andereAntragstellerIn.length > 0) $andereAntragstellerIn.change(function () {
             if ($(this).prop("checked")) {
                 $(".antragstellerIn_daten input").each(function () {
@@ -111,7 +112,8 @@ $bin_organisation = ($antragstellerIn->typ == Person::$TYP_ORGANISATION);
                     $input.val($input.data("orig"));
                 });
             }
-        });
+        }).change();
+        */
         $unter.find(".unterstuetzerInnen_adder a").click(function (ev) {
             ev.preventDefault();
             $(".unterstuetzerInnen_list").append('<input type="text" name="UnterstuetzerInnen_name[]" value="" placeholder="Name" title="Name der Länderratsdelegierten">\

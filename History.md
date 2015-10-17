@@ -1,3 +1,20 @@
+2.7.0 - 2015-05-21
+==================
+
+* Im Backend gibt es nun eine komplette Liste aller Anträge und Änderungsanträge. Dort kann man Anträge gesammelt freischalten / löschen und Anträge "kopieren" (bzw. die Liste der AntragstellerInnen).
+* Beim Hinzufügen von Personen zu einem Antrag im Backend wurde die Auswahlbox existierender Personen entfernt. Dafür gibt es nun die Möglichkeit, auch die Organisation und das Beschlussdatum anzugeben.
+* Stellt man einen (Änderungs-)Antrag als Wurzelwerk-NutzerIn, wird jetzt von der Antragsseite aus das Wurzelwerk-Profil verlinkt.
+* Es gibt einen Hook für veranstaltungsspezifische Einstellungen, mit dem sich ein Reply-To-Header in der Registrierungs-Email bei Namespace-Accounts setzen lässt.
+* Bugfix: Die "Nur WurzelwerklerInnen"-Einstellung funktionierte bei Kommentaren nicht.
+
+2.6.6 - 2015-04-08
+==================
+
+* Bugfix: gelöschte Anträge wurden im Backend noch angezeigt.
+* Wenn ein Antrag von der AntragstellerIn noch unbestätigt ist, zeigt der Link auf der Startseite unter "Meine Anträge" zum Bestätigen-Formular.
+* In der Antragsliste im Admin-Backend gibt es einen zusätzlichen Filter für AntragstellerInnen.
+* Sicherstellen, dass auch im Admin-Backend keine Änderungsantragsnummer doppelt vergeben werden kann (wie bei v2.6.4 bei den Anträgen) 
+
 2.6.5 - 2015-03-24
 ==================
 
@@ -45,7 +62,6 @@
 * Schlagworte eines Antrags werden nun beim Excel-Export in einer eigenen Spalte angezeigt.
 * Der Titel eines Antrags wird beim Excel-Export nun in einer eigenen Spalte angezeigt.
 
-
 2.5.3 - 2015-02-07
 ==================
 
@@ -57,7 +73,6 @@
 * Das Löschen von Anträgen im Admin-Backend funktionierte nicht
 * Update auf CKEditor 4.4.7
 
-
 2.5.1 - 2015-01-10
 ==================
 
@@ -68,8 +83,6 @@
   * veranstaltungsspezifisch_antrag_max_len: Verschiedene maximale Textlängen in einer Veranstaltung abhängig vom Antragstyp festlegen
   * veranstaltungsspezifisch_antrag_pdf_header: Aspekte des Antrags-PDF einstellen
   * veranstaltungsspezifisch_email_from_name: Den Absendername bei E-Mails einstellen
-
-
 
 2.5.0 - 2015-01-04
 ==================

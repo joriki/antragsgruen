@@ -35,6 +35,10 @@ $this->breadcrumbs = array(
 			<a href="<?php echo $this->createUrl("admin/veranstaltungen/update_extended") ?>"><?php echo $sprache->get("ExpertInnen-Einstellungen"); ?></a>
 		</li>
 
+		<li style="margin-top: 10px; font-weight: bold;">
+			<a href="<?php echo $this->createUrl("admin/index/antragsliste") ?>">Anträge und Änderungsanträge</a>
+		</li>
+
 		<li style="margin-top: 10px; font-weight: bold;"><a
 				href="<?php echo $this->createUrl("admin/antraege") ?>"><?php echo Antrag::label(2) ?></a></li>
 		<li style="margin-left: 20px;">

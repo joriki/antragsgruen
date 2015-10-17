@@ -108,6 +108,9 @@ foreach ($antrag->antragKommentare as $komm) if ($komm->absatz < 0 && $komm->sta
 						$x = array();
 						foreach ($antrag->antragUnterstuetzerInnen as $unt) if ($unt->rolle == IUnterstuetzerInnen::$ROLLE_INITIATORIN) {
 							$name = $unt->getNameMitBeschlussdatum(true);
+							if ($unt->person->istWurzelwerklerIn()) {
+								$name .= ' (<a href="https://wurzelwerk.gruene.de/web/' . CHtml::encode($unt->person->getWurzelwerkName()) . '">Wurzelwerk-Profil</a>)';
+							}
 							if ($antrag->veranstaltung->isAdminCurUser() && ($unt->person->email != "" || $unt->person->telefon != "")) {
 								$name .= " <small>(Kontaktdaten, nur als Admin sichtbar: ";
 								if ($unt->person->email != "") $name .= "E-Mail: " . CHtml::encode($unt->person->email);
@@ -124,9 +127,13 @@ foreach ($antrag->antragKommentare as $komm) if ($komm->absatz < 0 && $komm->sta
 					<th>Status:</th>
 					<td><?php
                         if ($antrag->status == IAntrag::$STATUS_EINGEREICHT_UNGEPRUEFT) {
-                            echo '<span class="ungeprueft">' . CHtml::encode(IAntrag::$STATI[$antrag->status]) . '</span>';
+							if ($antrag->veranstaltung->veranstaltungsreihe->subdomain == "wiesbaden") {
+								echo '<span class="ungeprueft">Eingereicht</span>';
+							} else {
+								echo '<span class="ungeprueft">' . CHtml::encode(IAntrag::$STATI[$antrag->status]) . '</span>';
+							}
                         } elseif ($antrag->status == IAntrag::$STATUS_EINGEREICHT_GEPRUEFT && $antrag->veranstaltung->getEinstellungen()->freischaltung_antraege_anzeigen) {
-                            echo '<span class="geprueft">Von der Programmkommission geprüft</span>';
+                            echo '<span class="geprueft">Bestätigt</span>';
                         } else {
                             echo CHtml::encode(IAntrag::$STATI[$antrag->status]);
                         }
@@ -254,7 +261,7 @@ foreach ($antrag->antragKommentare as $komm) if ($komm->absatz < 0 && $komm->sta
 
 <?
 $text2name = veranstaltungsspezifisch_text2_name($antrag->veranstaltung, $antrag->typ);
-if ($text2name && trim($antrag->text2)) {
+if ($text2name) {
     $classes = "";
     if (!in_array(AntragKommentar::ABSATZ_TEXT2, $kommentare_offen)) $classes .= " kommentare_closed_absatz";
     ?>

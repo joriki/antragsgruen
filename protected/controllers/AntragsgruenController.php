@@ -12,6 +12,8 @@ class AntragsgruenController extends CController
 	public $text_comments = true;
 	public $shrink_cols = false;
     public $magenta_layout = false;
+	public $full_width = false;
+	public $pageDescription = '';
 
 	/** @var null|Veranstaltung */
 	public $veranstaltung = null;
@@ -299,7 +301,7 @@ class AntragsgruenController extends CController
 			$send_text = "Hallo,\n\num deinen Antragsgrün-Zugang zu aktivieren, klicke entweder auf folgenden Link:\n%best_link%\n\n"
 				. "...oder gib, wenn du auf Antragsgrün danach gefragt wirst, folgenden Code ein: %code%\n\n"
 				. "Liebe Grüße,\n\tDas Antragsgrün-Team.";
-			AntraegeUtils::send_mail_log(EmailLog::$EMAIL_TYP_REGISTRIERUNG, $username, $person->id, "Anmeldung bei Antragsgrün", $send_text, null, null, array(
+			AntraegeUtils::send_mail_log(EmailLog::$EMAIL_TYP_REGISTRIERUNG, $username, $person->id, "Anmeldung bei Antragsgrün", $send_text, null, null, null, array(
 				"%code%"      => $best_code,
 				"%best_link%" => $link,
 			));
@@ -372,14 +374,18 @@ class AntragsgruenController extends CController
 		$user->save();
 
 		if (trim($email) != "") {
+			$username = $email;
+			if ($user->istWurzelwerklerIn()) {
+				$username = $user->getWurzelwerkName();
+			}
 			$user->refresh();
 			$send_text = "Hallo!\n\nDein Zugang bei Antragsgrün wurde eben eingerichtet.\n\n" .
-				"Du kannst dich mit folgenden Daten einloggen:\nBenutzerInnenname: $email\nPasswort: %passwort%\n\n" .
+				"Du kannst dich mit folgenden Daten einloggen:\nBenutzerInnenname: $username\nPasswort: %passwort%\n\n" .
 				"Das Passwort kannst du hier ändern:\n" .
-				yii::app()->getBaseUrl(true) . yii::app()->createUrl("infos/passwort") . "\n\n" .
+				yii::app()->getBaseUrl(true) . "/passwort" . "\n\n" .
 				"Außerdem ist auch weiterhin ein Login über deinen Wurzelwerk-Zugang möglich.\n\n" .
 				"Liebe Grüße,\n  Das Antragsgrün-Team";
-			AntraegeUtils::send_mail_log(EmailLog::$EMAIL_TYP_REGISTRIERUNG, $email, $user->id, "Dein Antragsgrün-Zugang", $send_text, null, null, array(
+			AntraegeUtils::send_mail_log(EmailLog::$EMAIL_TYP_REGISTRIERUNG, $email, $user->id, "Dein Antragsgrün-Zugang", $send_text, null, null, null, array(
 				"%passwort%" => $password,
 			));
 		}
@@ -394,6 +400,9 @@ class AntragsgruenController extends CController
 	 */
 	private function performLogin_OAuth_callback($success_redirect, $openid_mode)
 	{
+		if (isset($_REQUEST['openid_mode']) && $_REQUEST['openid_mode'] == 'error' && isset($_REQUEST['openid_error'])) {
+			throw new Exception("Leider ist beim Einloggen ein Fehler aufgetreten:<br>" . $_REQUEST['openid_error']);
+		}
 		/** @var LightOpenID $loid */
 		$loid = Yii::app()->loid->load();
 		if ($openid_mode != 'cancel') {
@@ -544,7 +553,6 @@ class AntragsgruenController extends CController
 			$person->status           = Person::$STATUS_UNCONFIRMED;
 			$person->typ              = Person::$TYP_PERSON;
 			$person->pwd_enc          = Person::create_hash($passwort);
-			$person->admin            = 0;
 
 			if ($person->save()) {
 				$person->refresh();
@@ -554,7 +562,7 @@ class AntragsgruenController extends CController
 					. "...oder gib, wenn du auf Antragsgrün danach gefragt wirst, folgenden Code ein: %code%\n\n"
 					. "Das Passwort für den Antragsgrün-Zugang lautet: %passwort%\n\n"
 					. "Liebe Grüße,\n\tDas Antragsgrün-Team.";
-				AntraegeUtils::send_mail_log(EmailLog::$EMAIL_TYP_REGISTRIERUNG, $email, $person->id, "Anmeldung bei Antragsgrün", $send_text, null, null, array(
+				AntraegeUtils::send_mail_log(EmailLog::$EMAIL_TYP_REGISTRIERUNG, $email, $person->id, "Anmeldung bei Antragsgrün", $send_text, null, null, null, array(
 					"%code%"      => $best_code,
 					"%best_link%" => $link,
 					"%passwort%"  => $passwort,
